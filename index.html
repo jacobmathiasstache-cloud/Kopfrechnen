@@ -7,6 +7,8 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Kopfrechnen">
 <meta name="theme-color" content="#EEF2F7">
+<link rel="apple-touch-icon" href="icon.png">
+<link rel="manifest" href="manifest.json">
 <title>Kopfrechnen</title>
 <style>
   :root {
@@ -312,5 +314,6 @@
   $('#home').onclick = () => show('#s-start');
 })();
 </script>
+<script>if("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js");</script>
 </body>
 </html>
