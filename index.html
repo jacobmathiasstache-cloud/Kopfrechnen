@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Kopfrechnen">
+<meta name="theme-color" content="#EEF2F7">
+<title>Kopfrechnen</title>
+<style>
+  :root {
+    --bg: #EEF2F7;
+    --ink: #14213D;
+    --muted: #6B7A99;
+    --line: #D6DEEA;
+    --key: #FFFFFF;
+    --accent: #2D6CDF;
+    --ok: #1F9D55;
+    --bad: #D64545;
+    --radius: 14px;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: ui-rounded, "SF Pro Rounded", -apple-system, system-ui, sans-serif;
+    font-size: 17px;
+    line-height: 1.35;
+    overscroll-behavior: none;
+    -webkit-user-select: none; user-select: none;
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+  .screen { display: none; min-height: 100dvh; flex-direction: column; padding: 24px 20px 20px; max-width: 480px; margin: 0 auto; }
+  .screen.active { display: flex; }
+
+  h1 { font-size: 34px; font-weight: 800; margin: 12px 0 4px; letter-spacing: -0.02em; }
+  .sub { color: var(--muted); margin: 0 0 28px; }
+  h2 { font-size: 15px; font-weight: 600; color: var(--muted); margin: 22px 0 10px; }
+
+  .chips { display: flex; gap: 10px; flex-wrap: wrap; }
+  .chip {
+    flex: 1 1 calc(25% - 10px); min-width: 64px;
+    padding: 14px 0; text-align: center; font-size: 22px; font-weight: 700;
+    background: var(--key); border: 2px solid var(--line); border-radius: var(--radius);
+    color: var(--muted); cursor: pointer;
+  }
+  .chip.on { border-color: var(--accent); color: var(--accent); background: #E9F0FD; }
+  .chip.txt { font-size: 16px; }
+
+  .spacer { flex: 1; }
+  .btn {
+    display: block; width: 100%; padding: 18px; border: 0; border-radius: var(--radius);
+    background: var(--accent); color: #fff; font: inherit; font-size: 19px; font-weight: 700; cursor: pointer;
+  }
+  .btn.ghost { background: transparent; color: var(--accent); }
+  .btn:active { filter: brightness(0.9); }
+  .best { text-align: center; color: var(--muted); font-size: 15px; margin-top: 14px; }
+
+  /* Spiel */
+  .top { display: flex; justify-content: space-between; align-items: baseline; color: var(--muted); font-size: 15px; font-variant-numeric: tabular-nums; }
+  .bar { height: 6px; background: var(--line); border-radius: 3px; margin: 10px 0 0; overflow: hidden; }
+  .bar i { display: block; height: 100%; width: 100%; background: var(--accent); transition: width 0.25s linear; }
+
+  .task { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 10px 0; }
+  .q { font-size: 44px; font-weight: 700; letter-spacing: -0.01em; font-variant-numeric: tabular-nums; }
+  .a {
+    margin-top: 10px; min-height: 64px; font-size: 52px; font-weight: 800; font-variant-numeric: tabular-nums;
+    border-bottom: 3px solid var(--line); min-width: 140px; padding: 0 10px; transition: color 0.15s, border-color 0.15s;
+  }
+  .a.empty::after { content: "?"; color: var(--line); }
+  .a.ok { color: var(--ok); border-color: var(--ok); }
+  .a.bad { color: var(--bad); border-color: var(--bad); }
+  .hint { height: 22px; margin-top: 6px; color: var(--bad); font-size: 15px; font-variant-numeric: tabular-nums; }
+
+  .pad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .k {
+    height: 62px; border: 0; border-radius: var(--radius); background: var(--key); color: var(--ink);
+    font: inherit; font-size: 26px; font-weight: 600; cursor: pointer; box-shadow: 0 1px 0 var(--line);
+  }
+  .k:active { background: #E2E8F2; }
+  .k.fn { background: #DCE4F0; font-size: 22px; }
+  .k.go { background: var(--accent); color: #fff; }
+
+  /* Ergebnis */
+  .score { font-size: 96px; font-weight: 800; line-height: 1; text-align: center; margin: 30px 0 4px; letter-spacing: -0.03em; }
+  .score-l { text-align: center; color: var(--muted); margin-bottom: 30px; }
+  .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .stat { background: var(--key); border-radius: var(--radius); padding: 14px 16px; }
+  .stat b { display: block; font-size: 26px; font-variant-numeric: tabular-nums; }
+  .stat span { color: var(--muted); font-size: 14px; }
+  .new { text-align: center; color: var(--ok); font-weight: 700; margin-top: 12px; height: 24px; }
+  .miss { margin-top: 20px; color: var(--muted); font-size: 15px; }
+  .miss div { padding: 6px 0; border-top: 1px solid var(--line); color: var(--ink); font-variant-numeric: tabular-nums; }
+
+  @media (prefers-reduced-motion: reduce) { .bar i, .a { transition: none; } }
+</style>
+</head>
+<body>
+
+<!-- Start -->
+<section class="screen active" id="s-start">
+  <h1>Kopfrechnen</h1>
+  <p class="sub">60 Sekunden, so viele Aufgaben wie möglich.</p>
+
+  <h2>Rechenarten</h2>
+  <div class="chips" id="ops">
+    <div class="chip on" data-op="+">+</div>
+    <div class="chip on" data-op="-">−</div>
+    <div class="chip on" data-op="*">×</div>
+    <div class="chip" data-op="/">÷</div>
+  </div>
+
+  <h2>Schwierigkeit</h2>
+  <div class="chips" id="lvl">
+    <div class="chip txt" data-lvl="1">Leicht</div>
+    <div class="chip txt on" data-lvl="2">Mittel</div>
+    <div class="chip txt" data-lvl="3">Schwer</div>
+  </div>
+
+  <h2>Dauer</h2>
+  <div class="chips" id="dur">
+    <div class="chip txt" data-dur="30">30 s</div>
+    <div class="chip txt on" data-dur="60">60 s</div>
+    <div class="chip txt" data-dur="120">2 min</div>
+  </div>
+
+  <div class="spacer"></div>
+  <button class="btn" id="start">Los geht's</button>
+  <p class="best" id="best"></p>
+</section>
+
+<!-- Spiel -->
+<section class="screen" id="s-game">
+  <div class="top"><span id="cnt">0 richtig</span><span id="time">60 s</span></div>
+  <div class="bar"><i id="fill"></i></div>
+
+  <div class="task">
+    <div class="q" id="q">7 × 8</div>
+    <div class="a empty" id="a"></div>
+    <div class="hint" id="hint"></div>
+  </div>
+
+  <div class="pad">
+    <button class="k">7</button><button class="k">8</button><button class="k">9</button>
+    <button class="k">4</button><button class="k">5</button><button class="k">6</button>
+    <button class="k">1</button><button class="k">2</button><button class="k">3</button>
+    <button class="k fn" data-k="neg">−</button><button class="k">0</button><button class="k fn" data-k="del">⌫</button>
+  </div>
+  <div class="pad" style="margin-top:10px; grid-template-columns: 1fr 2fr;">
+    <button class="k fn" data-k="quit">Abbrechen</button>
+    <button class="k go" data-k="ok">Prüfen</button>
+  </div>
+</section>
+
+<!-- Ergebnis -->
+<section class="screen" id="s-end">
+  <div class="score" id="r-score">0</div>
+  <div class="score-l">richtig gelöst</div>
+  <div class="stats">
+    <div class="stat"><b id="r-acc">–</b><span>Trefferquote</span></div>
+    <div class="stat"><b id="r-avg">–</b><span>Ø Zeit pro Aufgabe</span></div>
+    <div class="stat"><b id="r-streak">–</b><span>Längste Serie</span></div>
+    <div class="stat"><b id="r-total">–</b><span>Aufgaben gesamt</span></div>
+  </div>
+  <div class="new" id="r-new"></div>
+  <div class="miss" id="r-miss"></div>
+  <div class="spacer"></div>
+  <button class="btn" id="again">Nochmal</button>
+  <button class="btn ghost" id="home">Einstellungen</button>
+</section>
+
+<script>
+(() => {
+  const $ = s => document.querySelector(s);
+  const show = id => { document.querySelectorAll('.screen').forEach(e => e.classList.remove('active')); $(id).classList.add('active'); };
+  const rnd = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+
+  // --- Einstellungen ---
+  const cfg = { ops: ['+', '-', '*'], lvl: 2, dur: 60 };
+  $('#ops').addEventListener('click', e => {
+    const c = e.target.closest('.chip'); if (!c) return;
+    c.classList.toggle('on');
+    cfg.ops = [...document.querySelectorAll('#ops .on')].map(x => x.dataset.op);
+    if (!cfg.ops.length) { c.classList.add('on'); cfg.ops = [c.dataset.op]; }
+  });
+  const single = (sel, key, cast) => $(sel).addEventListener('click', e => {
+    const c = e.target.closest('.chip'); if (!c) return;
+    document.querySelectorAll(sel + ' .chip').forEach(x => x.classList.remove('on'));
+    c.classList.add('on'); cfg[key] = cast(c.dataset[key]);
+    showBest();
+  });
+  single('#lvl', 'lvl', Number);
+  single('#dur', 'dur', Number);
+
+  // Bestwert (falls Speicher verfügbar)
+  const store = {
+    get k() { return 'kr-best-' + cfg.lvl + '-' + cfg.dur; },
+    read() { try { return Number(localStorage.getItem(this.k)) || 0; } catch { return 0; } },
+    write(v) { try { localStorage.setItem(this.k, v); } catch {} }
+  };
+  const showBest = () => { const b = store.read(); $('#best').textContent = b ? 'Bestwert: ' + b + ' richtig' : ''; };
+  showBest();
+
+  // --- Aufgaben ---
+  const range = { 1: [1, 20], 2: [2, 99], 3: [11, 999] };
+  function makeTask() {
+    const op = cfg.ops[rnd(0, cfg.ops.length - 1)];
+    const [lo, hi] = range[cfg.lvl];
+    let a, b, r, txt;
+    if (op === '+') { a = rnd(lo, hi); b = rnd(lo, hi); r = a + b; txt = `${a} + ${b}`; }
+    else if (op === '-') { a = rnd(lo, hi); b = rnd(lo, hi); if (cfg.lvl < 3 && b > a) [a, b] = [b, a]; r = a - b; txt = `${a} − ${b}`; }
+    else if (op === '*') {
+      const m = { 1: [2, 10], 2: [2, 20], 3: [11, 99] }[cfg.lvl];
+      a = rnd(m[0], m[1]); b = cfg.lvl === 3 ? rnd(2, 12) : rnd(2, 12);
+      r = a * b; txt = `${a} × ${b}`;
+    } else {
+      const m = { 1: [2, 10], 2: [2, 20], 3: [11, 99] }[cfg.lvl];
+      b = rnd(m[0], m[1]); r = rnd(2, cfg.lvl === 3 ? 30 : 12); a = b * r; txt = `${a} ÷ ${b}`;
+    }
+    return { txt, r };
+  }
+
+  // --- Spiel ---
+  let st;
+  function start() {
+    st = { correct: 0, total: 0, streak: 0, best: 0, input: '', missed: [], t0: 0, timer: null, end: 0 };
+    show('#s-game');
+    next();
+    st.end = Date.now() + cfg.dur * 1000;
+    st.t0 = Date.now();
+    tick();
+    st.timer = setInterval(tick, 200);
+  }
+  function tick() {
+    const left = Math.max(0, st.end - Date.now());
+    $('#time').textContent = Math.ceil(left / 1000) + ' s';
+    $('#fill').style.width = (left / (cfg.dur * 1000) * 100) + '%';
+    if (left <= 0) finish();
+  }
+  function next() {
+    st.task = makeTask();
+    $('#q').textContent = st.task.txt;
+    st.input = ''; render();
+    $('#hint').textContent = '';
+    $('#a').classList.remove('ok', 'bad');
+  }
+  function render() {
+    const a = $('#a');
+    a.textContent = st.input;
+    a.classList.toggle('empty', st.input === '');
+  }
+  function check() {
+    if (st.input === '' || st.input === '-') return;
+    st.total++;
+    const a = $('#a');
+    if (Number(st.input) === st.task.r) {
+      st.correct++; st.streak++; st.best = Math.max(st.best, st.streak);
+      a.classList.add('ok');
+      $('#cnt').textContent = st.correct + ' richtig';
+      setTimeout(next, 120);
+    } else {
+      st.streak = 0;
+      st.missed.push(`${st.task.txt} = ${st.task.r}`);
+      a.classList.add('bad');
+      $('#hint').textContent = 'Richtig wäre ' + st.task.r;
+      if (navigator.vibrate) navigator.vibrate(60);
+      setTimeout(next, 700);
+    }
+  }
+  function finish() {
+    clearInterval(st.timer);
+    const secs = (Date.now() - st.t0) / 1000;
+    $('#r-score').textContent = st.correct;
+    $('#r-total').textContent = st.total;
+    $('#r-acc').textContent = st.total ? Math.round(st.correct / st.total * 100) + ' %' : '–';
+    $('#r-avg').textContent = st.total ? (secs / st.total).toFixed(1) + ' s' : '–';
+    $('#r-streak').textContent = st.best;
+    const prev = store.read();
+    $('#r-new').textContent = st.correct > prev ? 'Neuer Bestwert!' : '';
+    if (st.correct > prev) store.write(st.correct);
+    const m = $('#r-miss');
+    m.innerHTML = st.missed.length ? 'Nochmal anschauen:' + st.missed.slice(0, 6).map(x => `<div>${x}</div>`).join('') : '';
+    show('#s-end');
+    showBest();
+  }
+
+  document.querySelectorAll('.k').forEach(k => k.addEventListener('click', () => {
+    const f = k.dataset.k;
+    if (!f) { if (st.input.replace('-', '').length < 7) st.input += k.textContent; }
+    else if (f === 'del') st.input = st.input.slice(0, -1);
+    else if (f === 'neg') st.input = st.input.startsWith('-') ? st.input.slice(1) : '-' + st.input;
+    else if (f === 'ok') return check();
+    else if (f === 'quit') { clearInterval(st.timer); return show('#s-start'); }
+    render();
+  }));
+
+  // Tastatur (falls am Rechner)
+  document.addEventListener('keydown', e => {
+    if (!$('#s-game').classList.contains('active')) return;
+    if (/^[0-9]$/.test(e.key)) st.input += e.key;
+    else if (e.key === 'Backspace') st.input = st.input.slice(0, -1);
+    else if (e.key === '-') st.input = st.input.startsWith('-') ? st.input.slice(1) : '-' + st.input;
+    else if (e.key === 'Enter') return check();
+    else return;
+    render();
+  });
+
+  $('#start').onclick = start;
+  $('#again').onclick = start;
+  $('#home').onclick = () => show('#s-start');
+})();
+</script>
+</body>
+</html>
