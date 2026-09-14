@@ -12,136 +12,165 @@
 <title>Kopfrechnen</title>
 <style>
   :root {
-    --bg: #EEF2F7;
-    --ink: #14213D;
-    --muted: #6B7A99;
-    --line: #D6DEEA;
-    --key: #FFFFFF;
-    --accent: #2D6CDF;
-    --ok: #1F9D55;
-    --bad: #D64545;
-    --radius: 14px;
+    --bg: #EEF2F7; --ink: #14213D; --muted: #6B7A99; --line: #D6DEEA; --key: #FFFFFF;
+    --accent: #2D6CDF; --accent-soft: #E9F0FD; --ok: #1F9D55; --bad: #D64545; --warn: #C97A12;
+    --r: 14px;
   }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html, body { height: 100%; margin: 0; }
   body {
-    background: var(--bg);
-    color: var(--ink);
+    background: var(--bg); color: var(--ink);
     font-family: ui-rounded, "SF Pro Rounded", -apple-system, system-ui, sans-serif;
-    font-size: 17px;
-    line-height: 1.35;
-    overscroll-behavior: none;
+    font-size: 16px; line-height: 1.35; overscroll-behavior: none;
     -webkit-user-select: none; user-select: none;
-    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
   }
-  .screen { display: none; min-height: 100dvh; flex-direction: column; padding: 24px 20px 20px; max-width: 480px; margin: 0 auto; }
+  .screen {
+    display: none; flex-direction: column; height: 100dvh; max-width: 480px; margin: 0 auto;
+    padding: calc(env(safe-area-inset-top) + 10px) 16px calc(env(safe-area-inset-bottom) + 10px);
+  }
   .screen.active { display: flex; }
+  .scroll { overflow-y: auto; -webkit-overflow-scrolling: touch; }
 
-  h1 { font-size: 34px; font-weight: 800; margin: 12px 0 4px; letter-spacing: -0.02em; }
-  .sub { color: var(--muted); margin: 0 0 28px; }
-  h2 { font-size: 15px; font-weight: 600; color: var(--muted); margin: 22px 0 10px; }
+  h1 { font-size: 30px; font-weight: 800; margin: 6px 0 2px; letter-spacing: -0.02em; }
+  .sub { color: var(--muted); margin: 0 0 14px; font-size: 15px; }
+  h2 { font-size: 14px; font-weight: 600; color: var(--muted); margin: 14px 0 8px; }
 
-  .chips { display: flex; gap: 10px; flex-wrap: wrap; }
+  .chips { display: grid; gap: 8px; }
+  .chips.c4 { grid-template-columns: repeat(4, 1fr); }
+  .chips.c3 { grid-template-columns: repeat(3, 1fr); }
   .chip {
-    flex: 1 1 calc(25% - 10px); min-width: 64px;
-    padding: 14px 0; text-align: center; font-size: 22px; font-weight: 700;
-    background: var(--key); border: 2px solid var(--line); border-radius: var(--radius);
-    color: var(--muted); cursor: pointer;
+    padding: 11px 0; text-align: center; font-size: 20px; font-weight: 700;
+    background: var(--key); border: 2px solid var(--line); border-radius: var(--r); color: var(--muted); cursor: pointer;
   }
-  .chip.on { border-color: var(--accent); color: var(--accent); background: #E9F0FD; }
-  .chip.txt { font-size: 16px; }
+  .chip.on { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+  .chip.txt { font-size: 15px; }
+  .chip small { display: block; font-size: 11px; font-weight: 600; margin-top: -2px; }
 
   .spacer { flex: 1; }
   .btn {
-    display: block; width: 100%; padding: 18px; border: 0; border-radius: var(--radius);
-    background: var(--accent); color: #fff; font: inherit; font-size: 19px; font-weight: 700; cursor: pointer;
+    display: block; width: 100%; padding: 15px; border: 0; border-radius: var(--r); margin-top: 8px;
+    background: var(--accent); color: #fff; font: inherit; font-size: 18px; font-weight: 700; cursor: pointer;
   }
   .btn.ghost { background: transparent; color: var(--accent); }
   .btn:active { filter: brightness(0.9); }
-  .best { text-align: center; color: var(--muted); font-size: 15px; margin-top: 14px; }
+  .best { text-align: center; color: var(--muted); font-size: 14px; margin: 8px 0 0; min-height: 18px; }
 
   /* Spiel */
-  .top { display: flex; justify-content: space-between; align-items: baseline; color: var(--muted); font-size: 15px; font-variant-numeric: tabular-nums; }
-  .bar { height: 6px; background: var(--line); border-radius: 3px; margin: 10px 0 0; overflow: hidden; }
+  .top { display: flex; justify-content: space-between; align-items: baseline; color: var(--muted); font-size: 14px; font-variant-numeric: tabular-nums; }
+  .bar { height: 5px; background: var(--line); border-radius: 3px; margin-top: 8px; overflow: hidden; }
   .bar i { display: block; height: 100%; width: 100%; background: var(--accent); transition: width 0.25s linear; }
+  .bar.paused i { background: var(--warn); }
 
-  .task { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 10px 0; }
-  .q { font-size: 44px; font-weight: 700; letter-spacing: -0.01em; font-variant-numeric: tabular-nums; }
+  .task { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; position: relative; min-height: 0; }
+  .q { font-size: 40px; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+  .q .rt { font-size: 0.82em; vertical-align: 0.06em; margin-right: 1px; }
+  .q .ov { text-decoration: overline; }
+  .q sup { font-size: 0.55em; }
   .a {
-    margin-top: 10px; min-height: 64px; font-size: 52px; font-weight: 800; font-variant-numeric: tabular-nums;
-    border-bottom: 3px solid var(--line); min-width: 140px; padding: 0 10px; transition: color 0.15s, border-color 0.15s;
+    margin-top: 6px; min-height: 58px; font-size: 48px; font-weight: 800; font-variant-numeric: tabular-nums;
+    border-bottom: 3px solid var(--line); min-width: 130px; padding: 0 8px; transition: color .15s, border-color .15s;
   }
   .a.empty::after { content: "?"; color: var(--line); }
   .a.ok { color: var(--ok); border-color: var(--ok); }
   .a.bad { color: var(--bad); border-color: var(--bad); }
-  .hint { height: 22px; margin-top: 6px; color: var(--bad); font-size: 15px; font-variant-numeric: tabular-nums; }
+  .hint { height: 20px; margin-top: 4px; color: var(--bad); font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; }
 
-  .pad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .help {
+    position: absolute; right: 0; top: 50%; transform: translateY(-50%);
+    width: 44px; height: 44px; border-radius: 50%; border: 2px solid var(--accent); background: var(--key);
+    color: var(--accent); font: inherit; font-size: 24px; font-weight: 800; cursor: pointer;
+  }
+  .help:active { background: var(--accent-soft); }
+  .help[hidden] { display: none; }
+
+  .pad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
   .k {
-    height: 62px; border: 0; border-radius: var(--radius); background: var(--key); color: var(--ink);
-    font: inherit; font-size: 26px; font-weight: 600; cursor: pointer; box-shadow: 0 1px 0 var(--line);
+    height: clamp(48px, 6.6vh, 60px); border: 0; border-radius: var(--r); background: var(--key); color: var(--ink);
+    font: inherit; font-size: 24px; font-weight: 600; cursor: pointer; box-shadow: 0 1px 0 var(--line);
   }
   .k:active { background: #E2E8F2; }
-  .k.fn { background: #DCE4F0; font-size: 22px; }
+  .k.fn { background: #DCE4F0; font-size: 19px; }
   .k.go { background: var(--accent); color: #fff; }
+  .k.go.next { background: var(--ok); }
 
   /* Ergebnis */
-  .score { font-size: 96px; font-weight: 800; line-height: 1; text-align: center; margin: 30px 0 4px; letter-spacing: -0.03em; }
-  .score-l { text-align: center; color: var(--muted); margin-bottom: 30px; }
-  .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .stat { background: var(--key); border-radius: var(--radius); padding: 14px 16px; }
-  .stat b { display: block; font-size: 26px; font-variant-numeric: tabular-nums; }
-  .stat span { color: var(--muted); font-size: 14px; }
-  .new { text-align: center; color: var(--ok); font-weight: 700; margin-top: 12px; height: 24px; }
-  .miss { margin-top: 20px; color: var(--muted); font-size: 15px; }
-  .miss div { padding: 6px 0; border-top: 1px solid var(--line); color: var(--ink); font-variant-numeric: tabular-nums; }
+  .score { font-size: 84px; font-weight: 800; line-height: 1; text-align: center; margin: 18px 0 2px; letter-spacing: -0.03em; }
+  .score-l { text-align: center; color: var(--muted); margin-bottom: 18px; }
+  .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .stat { background: var(--key); border-radius: var(--r); padding: 10px 14px; }
+  .stat b { display: block; font-size: 22px; font-variant-numeric: tabular-nums; }
+  .stat span { color: var(--muted); font-size: 13px; }
+  .new { text-align: center; color: var(--ok); font-weight: 700; margin-top: 8px; min-height: 22px; }
+  .miss { margin-top: 10px; color: var(--muted); font-size: 14px; }
+  .miss div { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-top: 1px solid var(--line); color: var(--ink); font-variant-numeric: tabular-nums; font-size: 16px; }
+  .miss button { border: 1px solid var(--accent); background: none; color: var(--accent); border-radius: 20px; padding: 3px 12px; font: inherit; font-size: 14px; font-weight: 700; }
+
+  /* Erklärung */
+  .sheet-bg { position: fixed; inset: 0; background: rgba(20,33,61,.35); display: none; z-index: 5; }
+  .sheet-bg.open { display: block; }
+  .sheet {
+    position: absolute; left: 0; right: 0; bottom: 0; max-height: 78dvh; background: var(--bg);
+    border-radius: 20px 20px 0 0; padding: 18px 20px calc(env(safe-area-inset-bottom) + 14px);
+    display: flex; flex-direction: column; max-width: 480px; margin: 0 auto;
+  }
+  .sheet h3 { margin: 0 0 2px; font-size: 20px; font-weight: 800; }
+  .sheet .strat { color: var(--accent); font-weight: 700; font-size: 15px; margin-bottom: 10px; }
+  .steps { overflow-y: auto; flex: 1; min-height: 0; }
+  .steps p { margin: 0; padding: 9px 0; border-top: 1px solid var(--line); font-variant-numeric: tabular-nums; font-size: 17px; }
+  .steps p b { color: var(--ok); }
+  .steps p.note { color: var(--muted); font-size: 14px; }
 
   @media (prefers-reduced-motion: reduce) { .bar i, .a { transition: none; } }
 </style>
 </head>
 <body>
 
-<!-- Start -->
 <section class="screen active" id="s-start">
-  <h1>Kopfrechnen</h1>
-  <p class="sub">60 Sekunden, so viele Aufgaben wie möglich.</p>
+  <div class="scroll">
+    <h1>Kopfrechnen</h1>
+    <p class="sub">Wähle Aufgabentypen, Stufe und Modus.</p>
 
-  <h2>Rechenarten</h2>
-  <div class="chips" id="ops">
-    <div class="chip on" data-op="+">+</div>
-    <div class="chip on" data-op="-">−</div>
-    <div class="chip on" data-op="*">×</div>
-    <div class="chip" data-op="/">÷</div>
+    <h2>Aufgabentypen</h2>
+    <div class="chips c4" id="ops">
+      <div class="chip on" data-op="add">+</div>
+      <div class="chip on" data-op="sub">−</div>
+      <div class="chip on" data-op="mul">×</div>
+      <div class="chip" data-op="div">÷</div>
+      <div class="chip" data-op="sq">x²</div>
+      <div class="chip" data-op="root">√</div>
+      <div class="chip" data-op="pct">%</div>
+      <div class="chip txt" data-op="all" style="font-size:13px">alle</div>
+    </div>
+
+    <h2>Schwierigkeit</h2>
+    <div class="chips c3" id="lvl">
+      <div class="chip txt" data-lvl="1">Leicht</div>
+      <div class="chip txt on" data-lvl="2">Mittel</div>
+      <div class="chip txt" data-lvl="3">Schwer</div>
+    </div>
+
+    <h2>Modus</h2>
+    <div class="chips c4" id="dur">
+      <div class="chip txt" data-dur="30">30 s</div>
+      <div class="chip txt on" data-dur="60">60 s</div>
+      <div class="chip txt" data-dur="120">2 min</div>
+      <div class="chip txt" data-dur="0">Üben<small>ohne Zeit</small></div>
+    </div>
   </div>
-
-  <h2>Schwierigkeit</h2>
-  <div class="chips" id="lvl">
-    <div class="chip txt" data-lvl="1">Leicht</div>
-    <div class="chip txt on" data-lvl="2">Mittel</div>
-    <div class="chip txt" data-lvl="3">Schwer</div>
-  </div>
-
-  <h2>Dauer</h2>
-  <div class="chips" id="dur">
-    <div class="chip txt" data-dur="30">30 s</div>
-    <div class="chip txt on" data-dur="60">60 s</div>
-    <div class="chip txt" data-dur="120">2 min</div>
-  </div>
-
   <div class="spacer"></div>
   <button class="btn" id="start">Los geht's</button>
   <p class="best" id="best"></p>
 </section>
 
-<!-- Spiel -->
 <section class="screen" id="s-game">
-  <div class="top"><span id="cnt">0 richtig</span><span id="time">60 s</span></div>
-  <div class="bar"><i id="fill"></i></div>
+  <div class="top"><span id="cnt">0 richtig</span><span id="time"></span></div>
+  <div class="bar" id="bar"><i id="fill"></i></div>
 
   <div class="task">
-    <div class="q" id="q">7 × 8</div>
+    <div class="q" id="q"></div>
     <div class="a empty" id="a"></div>
     <div class="hint" id="hint"></div>
+    <button class="help" id="help" aria-label="Rechenweg erklären">?</button>
   </div>
 
   <div class="pad">
@@ -150,170 +179,431 @@
     <button class="k">1</button><button class="k">2</button><button class="k">3</button>
     <button class="k fn" data-k="neg">−</button><button class="k">0</button><button class="k fn" data-k="del">⌫</button>
   </div>
-  <div class="pad" style="margin-top:10px; grid-template-columns: 1fr 2fr;">
-    <button class="k fn" data-k="quit">Abbrechen</button>
-    <button class="k go" data-k="ok">Prüfen</button>
+  <div class="pad" style="margin-top:8px; grid-template-columns: 1fr 2fr;">
+    <button class="k fn" data-k="quit" id="quit">Beenden</button>
+    <button class="k go" data-k="ok" id="ok">Prüfen</button>
   </div>
 </section>
 
-<!-- Ergebnis -->
 <section class="screen" id="s-end">
-  <div class="score" id="r-score">0</div>
-  <div class="score-l">richtig gelöst</div>
-  <div class="stats">
-    <div class="stat"><b id="r-acc">–</b><span>Trefferquote</span></div>
-    <div class="stat"><b id="r-avg">–</b><span>Ø Zeit pro Aufgabe</span></div>
-    <div class="stat"><b id="r-streak">–</b><span>Längste Serie</span></div>
-    <div class="stat"><b id="r-total">–</b><span>Aufgaben gesamt</span></div>
+  <div class="scroll">
+    <div class="score" id="r-score">0</div>
+    <div class="score-l">richtig gelöst</div>
+    <div class="stats">
+      <div class="stat"><b id="r-acc">–</b><span>Trefferquote</span></div>
+      <div class="stat"><b id="r-avg">–</b><span>Ø Zeit pro Aufgabe</span></div>
+      <div class="stat"><b id="r-streak">–</b><span>Längste Serie</span></div>
+      <div class="stat"><b id="r-help">–</b><span>Hilfen benutzt</span></div>
+    </div>
+    <div class="new" id="r-new"></div>
+    <div class="miss" id="r-miss"></div>
   </div>
-  <div class="new" id="r-new"></div>
-  <div class="miss" id="r-miss"></div>
   <div class="spacer"></div>
   <button class="btn" id="again">Nochmal</button>
   <button class="btn ghost" id="home">Einstellungen</button>
 </section>
+
+<div class="sheet-bg" id="sheet-bg">
+  <div class="sheet">
+    <h3 id="e-title"></h3>
+    <div class="strat" id="e-strat"></div>
+    <div class="steps" id="e-steps"></div>
+    <button class="btn" id="e-close">Verstanden</button>
+  </div>
+</div>
 
 <script>
 (() => {
   const $ = s => document.querySelector(s);
   const show = id => { document.querySelectorAll('.screen').forEach(e => e.classList.remove('active')); $(id).classList.add('active'); };
   const rnd = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+  const pick = arr => arr[rnd(0, arr.length - 1)];
+  const S = '&thinsp;'; // schmaler Abstand
+  const B = x => `<b>${x}</b>`;
 
-  // --- Einstellungen ---
-  const cfg = { ops: ['+', '-', '*'], lvl: 2, dur: 60 };
+  // ---------- Einstellungen ----------
+  const ALL = ['add', 'sub', 'mul', 'div', 'sq', 'root', 'pct'];
+  const cfg = { ops: ['add', 'sub', 'mul'], lvl: 2, dur: 60 };
+  const syncOps = () => {
+    document.querySelectorAll('#ops .chip').forEach(c => {
+      if (c.dataset.op === 'all') c.classList.toggle('on', cfg.ops.length === ALL.length);
+      else c.classList.toggle('on', cfg.ops.includes(c.dataset.op));
+    });
+  };
   $('#ops').addEventListener('click', e => {
     const c = e.target.closest('.chip'); if (!c) return;
-    c.classList.toggle('on');
-    cfg.ops = [...document.querySelectorAll('#ops .on')].map(x => x.dataset.op);
-    if (!cfg.ops.length) { c.classList.add('on'); cfg.ops = [c.dataset.op]; }
+    const op = c.dataset.op;
+    if (op === 'all') cfg.ops = cfg.ops.length === ALL.length ? ['add'] : [...ALL];
+    else if (cfg.ops.includes(op)) { if (cfg.ops.length > 1) cfg.ops = cfg.ops.filter(o => o !== op); }
+    else cfg.ops.push(op);
+    syncOps();
   });
-  const single = (sel, key, cast) => $(sel).addEventListener('click', e => {
+  const single = (sel, key) => $(sel).addEventListener('click', e => {
     const c = e.target.closest('.chip'); if (!c) return;
     document.querySelectorAll(sel + ' .chip').forEach(x => x.classList.remove('on'));
-    c.classList.add('on'); cfg[key] = cast(c.dataset[key]);
-    showBest();
+    c.classList.add('on'); cfg[key] = Number(c.dataset[key]); showBest();
   });
-  single('#lvl', 'lvl', Number);
-  single('#dur', 'dur', Number);
+  single('#lvl', 'lvl'); single('#dur', 'dur');
 
-  // Bestwert (falls Speicher verfügbar)
   const store = {
-    get k() { return 'kr-best-' + cfg.lvl + '-' + cfg.dur; },
+    get k() { return 'kr2-best-' + cfg.lvl + '-' + cfg.dur; },
     read() { try { return Number(localStorage.getItem(this.k)) || 0; } catch { return 0; } },
     write(v) { try { localStorage.setItem(this.k, v); } catch {} }
   };
-  const showBest = () => { const b = store.read(); $('#best').textContent = b ? 'Bestwert: ' + b + ' richtig' : ''; };
+  const showBest = () => { const b = store.read(); $('#best').textContent = b && cfg.dur ? 'Bestwert: ' + b + ' richtig' : ''; };
   showBest();
 
-  // --- Aufgaben ---
-  const range = { 1: [1, 20], 2: [2, 99], 3: [11, 999] };
-  function makeTask() {
-    const op = cfg.ops[rnd(0, cfg.ops.length - 1)];
-    const [lo, hi] = range[cfg.lvl];
-    let a, b, r, txt;
-    if (op === '+') { a = rnd(lo, hi); b = rnd(lo, hi); r = a + b; txt = `${a} + ${b}`; }
-    else if (op === '-') { a = rnd(lo, hi); b = rnd(lo, hi); if (cfg.lvl < 3 && b > a) [a, b] = [b, a]; r = a - b; txt = `${a} − ${b}`; }
-    else if (op === '*') {
-      const m = { 1: [2, 10], 2: [2, 20], 3: [11, 99] }[cfg.lvl];
-      a = rnd(m[0], m[1]); b = cfg.lvl === 3 ? rnd(2, 12) : rnd(2, 12);
-      r = a * b; txt = `${a} × ${b}`;
-    } else {
-      const m = { 1: [2, 10], 2: [2, 20], 3: [11, 99] }[cfg.lvl];
-      b = rnd(m[0], m[1]); r = rnd(2, cfg.lvl === 3 ? 30 : 12); a = b * r; txt = `${a} ÷ ${b}`;
+  // ---------- Erklärungs-Bausteine ----------
+  const tens = n => Math.floor(n / 10) * 10;
+  const ones = n => n % 10;
+  const sq = n => n * n;
+
+  function explainAdd(a, b) {
+    const s = [];
+    if (b >= 10 && ones(b) >= 7) {
+      const k = 10 - ones(b), bb = b + k;
+      s.push(`${b} liegt nahe an ${bb}. Erst mit ${bb} rechnen, dann ${k} zurücknehmen.`);
+      s.push(`${a} + ${bb} = ${a + bb}`);
+      s.push(`${a + bb} − ${k} = ${B(a + b)}`);
+      return ['Runden und korrigieren', s];
     }
-    return { txt, r };
+    if (b >= 100) {
+      const h = Math.floor(b / 100) * 100, t = tens(b) - h, o = ones(b);
+      s.push(`${b} zerlegen: ${h} + ${t} + ${o}. Schrittweise dazuzählen.`);
+      s.push(`${a} + ${h} = ${a + h}`);
+      if (t) s.push(`${a + h} + ${t} = ${a + h + t}`);
+      s.push(`${a + h + t} + ${o} = ${B(a + b)}`);
+      return ['Stellenweise addieren', s];
+    }
+    if (b >= 10) {
+      s.push(`${b} zerlegen in ${tens(b)} und ${ones(b)}. Erst die Zehner, dann die Einer.`);
+      s.push(`${a} + ${tens(b)} = ${a + tens(b)}`);
+      s.push(`${a + tens(b)} + ${ones(b)} = ${B(a + b)}`);
+      return ['Erst Zehner, dann Einer', s];
+    }
+    const k = 10 - ones(a);
+    if (ones(a) && k < b) {
+      s.push(`${a} braucht ${k} bis zur nächsten Zehnerzahl. ${b} = ${k} + ${b - k}.`);
+      s.push(`${a} + ${k} = ${a + k}`);
+      s.push(`${a + k} + ${b - k} = ${B(a + b)}`);
+      return ['Bis zum vollen Zehner auffüllen', s];
+    }
+    s.push(`${a} + ${b} = ${B(a + b)}`);
+    return ['Direkt rechnen', s];
   }
 
-  // --- Spiel ---
+  function explainSub(a, b) {
+    const s = [];
+    if (b >= 10 && ones(b) >= 7) {
+      const k = 10 - ones(b), bb = b + k;
+      s.push(`${b} liegt nahe an ${bb}. Erst ${bb} abziehen, dann ${k} wieder dazu.`);
+      s.push(`${a} − ${bb} = ${a - bb}`);
+      s.push(`${a - bb} + ${k} = ${B(a - b)}`);
+      return ['Runden und korrigieren', s];
+    }
+    if (a > b && a - b <= 12 && a >= 20) {
+      s.push(`${a} und ${b} liegen dicht beieinander – von ${b} nach oben zählen.`);
+      s.push(`${b} → ${a}: Abstand ${B(a - b)}`);
+      return ['Ergänzen statt abziehen', s];
+    }
+    if (b >= 100) {
+      const h = Math.floor(b / 100) * 100, t = tens(b) - h, o = ones(b);
+      s.push(`${b} zerlegen: ${h} + ${t} + ${o}. Schrittweise abziehen.`);
+      s.push(`${a} − ${h} = ${a - h}`);
+      if (t) s.push(`${a - h} − ${t} = ${a - h - t}`);
+      s.push(`${a - h - t} − ${o} = ${B(a - b)}`);
+      return ['Stellenweise subtrahieren', s];
+    }
+    if (b >= 10) {
+      s.push(`${b} zerlegen in ${tens(b)} und ${ones(b)}.`);
+      s.push(`${a} − ${tens(b)} = ${a - tens(b)}`);
+      s.push(`${a - tens(b)} − ${ones(b)} = ${B(a - b)}`);
+      return ['Erst Zehner, dann Einer', s];
+    }
+    const o = ones(a);
+    if (o && o < b && a >= 10) {
+      s.push(`Erst bis zum vollen Zehner (${o} abziehen), dann den Rest (${b - o}).`);
+      s.push(`${a} − ${o} = ${a - o}`);
+      s.push(`${a - o} − ${b - o} = ${B(a - b)}`);
+      return ['Über den Zehner gehen', s];
+    }
+    s.push(`${a} − ${b} = ${B(a - b)}`);
+    return ['Direkt rechnen', s];
+  }
+
+  function explainMul(a, b) {
+    const s = [], r = a * b;
+    // Sonderfaktoren
+    const special = (x, y) => {
+      if (y === 5) { s.push(`Mal 5 = mal 10, dann halbieren.`); s.push(`${x} × 10 = ${x * 10}`); s.push(`${x * 10} ÷ 2 = ${B(r)}`); return 'Mal 5: verzehnfachen, halbieren'; }
+      if (y === 25) { s.push(`Mal 25 = mal 100, dann vierteln.`); s.push(`${x} × 100 = ${x * 100}`); s.push(`${x * 100} ÷ 4 = ${B(r)}`); return 'Mal 25: mal 100, dann vierteln'; }
+      if (y === 50) { s.push(`Mal 50 = mal 100, dann halbieren.`); s.push(`${x} × 100 = ${x * 100}`); s.push(`${x * 100} ÷ 2 = ${B(r)}`); return 'Mal 50: mal 100, halbieren'; }
+      if (y === 15) { s.push(`Mal 15 = mal 10 plus die Hälfte davon.`); s.push(`${x} × 10 = ${x * 10}`); s.push(`Hälfte: ${x * 5}`); s.push(`${x * 10} + ${x * 5} = ${B(r)}`); return 'Mal 15: mal 10 plus Hälfte'; }
+      if (y === 9 || y === 99) { const t = y + 1; s.push(`${y} = ${t} − 1. Also mal ${t}, dann einmal ${x} abziehen.`); s.push(`${x} × ${t} = ${x * t}`); s.push(`${x * t} − ${x} = ${B(r)}`); return `Mal ${y}: mal ${t} minus ${x}`; }
+      if (y === 11 || y === 101) { const t = y - 1; s.push(`${y} = ${t} + 1. Also mal ${t}, dann einmal ${x} dazu.`); s.push(`${x} × ${t} = ${x * t}`); s.push(`${x * t} + ${x} = ${B(r)}`); return `Mal ${y}: mal ${t} plus ${x}`; }
+      if (y === 12) { s.push(`Mal 12 = mal 10 plus mal 2.`); s.push(`${x} × 10 = ${x * 10}`); s.push(`${x} × 2 = ${x * 2}`); s.push(`${x * 10} + ${x * 2} = ${B(r)}`); return 'Mal 12: mal 10 plus mal 2'; }
+      if (y === 4 && x > 12) { s.push(`Mal 4 = zweimal verdoppeln.`); s.push(`${x} × 2 = ${x * 2}`); s.push(`${x * 2} × 2 = ${B(r)}`); return 'Mal 4: zweimal verdoppeln'; }
+      if (y === 8 && x > 12) { s.push(`Mal 8 = dreimal verdoppeln.`); s.push(`${x} → ${x * 2} → ${x * 4} → ${B(r)}`); return 'Mal 8: dreimal verdoppeln'; }
+      return null;
+    };
+    let t = special(a, b) || special(b, a);
+    if (t) return [t, s];
+
+    // Differenz von Quadraten: (m−k)(m+k)
+    if ((a + b) % 2 === 0 && (a + b) / 2 % 10 === 0 && a !== b) {
+      const m = (a + b) / 2, k = Math.abs(a - m);
+      s.push(`${a} und ${b} liegen symmetrisch um ${m}: (${m} − ${k}) × (${m} + ${k}) = ${m}² − ${k}².`);
+      s.push(`${m}² = ${m * m},  ${k}² = ${k * k}`);
+      s.push(`${m * m} − ${k * k} = ${B(r)}`);
+      return ['Dritte binomische Formel', s];
+    }
+    // Faktor nahe an Zehnerzahl
+    const near = (x, y) => {
+      const o = ones(x);
+      if (x >= 18 && (o >= 8 || (o <= 2 && o > 0))) {
+        const m = o >= 8 ? tens(x) + 10 : tens(x), k = x - m; // k negativ oder positiv
+        s.push(`${x} = ${m} ${k < 0 ? '−' : '+'} ${Math.abs(k)}. Mit ${m} rechnen und korrigieren.`);
+        s.push(`${m} × ${y} = ${m * y}`);
+        s.push(`${Math.abs(k)} × ${y} = ${Math.abs(k) * y}`);
+        s.push(`${m * y} ${k < 0 ? '−' : '+'} ${Math.abs(k) * y} = ${B(r)}`);
+        return 'Runden und korrigieren';
+      }
+      return null;
+    };
+    t = near(a, b) || near(b, a);
+    if (t) return [t, s];
+
+    // Halbieren/Verdoppeln bei gerader Zahl
+    if (b % 2 === 0 && b >= 14 && a % 5 === 0) {
+      s.push(`Einen Faktor verdoppeln, den anderen halbieren – das Produkt bleibt gleich.`);
+      s.push(`${a} × ${b} = ${a * 2} × ${b / 2}`);
+      s.push(`${a * 2} × ${b / 2} = ${B(r)}`);
+      return ['Verdoppeln und halbieren', s];
+    }
+    // Allgemein: zerlegen
+    if (b >= 10) {
+      s.push(`${b} in ${tens(b)} und ${ones(b)} zerlegen, beides mal ${a}.`);
+      s.push(`${a} × ${tens(b)} = ${a * tens(b)}`);
+      if (ones(b)) s.push(`${a} × ${ones(b)} = ${a * ones(b)}`);
+      s.push(`${a * tens(b)}${ones(b) ? ' + ' + a * ones(b) : ''} = ${B(r)}`);
+      return ['Einen Faktor zerlegen', s];
+    }
+    if (a >= 10) {
+      s.push(`${a} in ${tens(a)} und ${ones(a)} zerlegen, beides mal ${b}.`);
+      s.push(`${tens(a)} × ${b} = ${tens(a) * b}`);
+      if (ones(a)) s.push(`${ones(a)} × ${b} = ${ones(a) * b}`);
+      s.push(`${tens(a) * b}${ones(a) ? ' + ' + ones(a) * b : ''} = ${B(r)}`);
+      return ['Einen Faktor zerlegen', s];
+    }
+    s.push(`Kleines Einmaleins: ${a} × ${b} = ${B(r)}`);
+    return ['Einmaleins', s];
+  }
+
+  function explainDiv(a, b) {
+    const s = [], q = a / b;
+    if (b === 5) { s.push(`Durch 5 = mal 2, dann durch 10.`); s.push(`${a} × 2 = ${a * 2}`); s.push(`${a * 2} ÷ 10 = ${B(q)}`); return ['Durch 5: verdoppeln, durch 10', s]; }
+    if (b === 25) { s.push(`Durch 25 = mal 4, dann durch 100.`); s.push(`${a} × 4 = ${a * 4}`); s.push(`${a * 4} ÷ 100 = ${B(q)}`); return ['Durch 25: mal 4, durch 100', s]; }
+    if (b % 2 === 0 && a % 2 === 0 && b > 10) {
+      s.push(`Beide Zahlen halbieren – der Quotient bleibt gleich.`);
+      s.push(`${a} ÷ ${b} = ${a / 2} ÷ ${b / 2}`);
+      if (b / 2 % 2 === 0 && a / 2 % 2 === 0) s.push(`Nochmal: ${a / 4} ÷ ${b / 4}`);
+      s.push(`= ${B(q)}`);
+      return ['Beide halbieren', s];
+    }
+    if (q > 10) {
+      const t = Math.floor(q / 10) * 10, rest = a - t * b;
+      s.push(`Ein großes Vielfaches von ${b} abziehen, den Rest aufteilen.`);
+      s.push(`${b} × ${t} = ${t * b}, bleibt ${a} − ${t * b} = ${rest}`);
+      s.push(`${rest} ÷ ${b} = ${rest / b}`);
+      s.push(`${t} + ${rest / b} = ${B(q)}`);
+      return ['Vielfaches abspalten', s];
+    }
+    s.push(`Rückwärts gefragt: ${b} mal was ergibt ${a}?`);
+    s.push(`${b} × ${q} = ${a}, also ${B(q)}`);
+    return ['Über das Einmaleins', s];
+  }
+
+  function explainSq(n) {
+    const s = [], r = n * n;
+    if (ones(n) === 5) {
+      const t = Math.floor(n / 10);
+      s.push(`Endet auf 5: Zehner mal (Zehner + 1), dahinter 25 anhängen.`);
+      s.push(`${t} × ${t + 1} = ${t * (t + 1)}`);
+      s.push(`${t * (t + 1)} und 25 → ${B(r)}`);
+      return ['Quadrat einer Zahl auf 5', s];
+    }
+    const base = Math.abs(n - 50) <= 9 ? 50 : Math.abs(n - 100) <= 9 ? 100 : Math.round(n / 10) * 10;
+    const k = n - base, sign = k < 0 ? '−' : '+';
+    if (n < 10) { s.push(`Kleines Einmaleins: ${n} × ${n} = ${B(r)}`); return ['Einmaleins', s]; }
+    s.push(`${n} = ${base} ${sign} ${Math.abs(k)}. Binomische Formel: (a ${sign} b)² = a² ${sign} 2ab + b².`);
+    s.push(`${base}² = ${base * base}`);
+    s.push(`2 × ${base} × ${Math.abs(k)} = ${2 * base * Math.abs(k)}`);
+    s.push(`${Math.abs(k)}² = ${k * k}`);
+    s.push(`${base * base} ${sign} ${2 * base * Math.abs(k)} + ${k * k} = ${B(r)}`);
+    return [base === 50 ? 'Nähe zu 50 nutzen' : base === 100 ? 'Nähe zu 100 nutzen' : 'Binomische Formel', s];
+  }
+
+  function explainRoot(r) {
+    const s = [], n = Math.sqrt(r);
+    if (n <= 12) { s.push(`Quadratzahl aus dem Einmaleins: ${n} × ${n} = ${r}, also ${B(n)}`); return ['Quadratzahlen kennen', s]; }
+    const t = Math.floor(n / 10) * 10;
+    const last = ones(r);
+    const cand = { 0: [0], 1: [1, 9], 4: [2, 8], 5: [5], 6: [4, 6], 9: [3, 7] }[last];
+    s.push(`Zehnerstelle eingrenzen: ${t}² = ${t * t} ≤ ${r} < ${(t + 10)}² = ${(t + 10) * (t + 10)}. Ergebnis liegt zwischen ${t} und ${t + 10}.`);
+    s.push(`Endziffer ${last} → das Quadrat endet nur auf ${last}, wenn die Zahl auf ${cand.join(' oder ')} endet.`);
+    if (cand.length > 1) {
+      const mid = t + 5;
+      s.push(`Entscheiden über ${mid}² = ${mid * mid}: ${r} ist ${r < mid * mid ? 'kleiner' : 'größer'}, also Endziffer ${ones(n)}.`);
+    }
+    s.push(`√${r} = ${B(n)}`);
+    return ['Endziffer und Zehner eingrenzen', s];
+  }
+
+  function explainPct(p, n) {
+    const s = [], r = p * n / 100;
+    const frac = { 50: 2, 25: 4, 20: 5, 10: 10, 5: 20 }[p];
+    if (frac) { s.push(`${p}% ist ein ${frac === 2 ? 'Halbes' : frac === 4 ? 'Viertel' : frac === 5 ? 'Fünftel' : frac === 10 ? 'Zehntel' : 'Zwanzigstel'}: durch ${frac} teilen.`); s.push(`${n} ÷ ${frac} = ${B(r)}`); return [`${p}% als Bruch`, s]; }
+    if (p === 75) { s.push(`75% = drei Viertel.`); s.push(`${n} ÷ 4 = ${n / 4}`); s.push(`${n / 4} × 3 = ${B(r)}`); return ['75% = ¾', s]; }
+    const t = Math.floor(p / 10) * 10, o = p % 10, ten = n / 10, one = n / 100;
+    s.push(`${p}% = ${t ? t + '% ' : ''}${t && o ? '+ ' : ''}${o ? o + '%' : ''}. 10% von ${n} = ${ten}${o && o !== 5 ? ', 1% = ' + String(one).replace('.', ',') : ''}.`);
+    if (t) s.push(`${t}% = ${t / 10} × ${ten} = ${t * n / 100}`);
+    if (o === 5) s.push(`5% = Hälfte von 10% = ${ten / 2}`);
+    else if (o) s.push(`${o}% = ${o} × ${String(one).replace('.', ',')} = ${o * n / 100}`);
+    if (t && o) s.push(`${t * n / 100} + ${o * n / 100} = ${B(r)}`); else s.push(`= ${B(r)}`);
+    return ['Über 10% und 1% aufbauen', s];
+  }
+
+  // ---------- Aufgaben ----------
+  const R = { 1: [1, 20], 2: [11, 99], 3: [101, 999] };
+  const G = {
+    add() { const [lo, hi] = R[cfg.lvl], a = rnd(lo, hi), b = rnd(lo, hi); return { txt: `${a} + ${b}`, r: a + b, ex: () => explainAdd(a, b) }; },
+    sub() { const [lo, hi] = R[cfg.lvl]; let a = rnd(lo, hi), b = rnd(lo, hi); if (cfg.lvl < 3 && b > a) [a, b] = [b, a]; return { txt: `${a} − ${b}`, r: a - b, ex: () => explainSub(a, b) }; },
+    mul() {
+      let a, b;
+      if (cfg.lvl === 1) { a = rnd(2, 10); b = rnd(2, 10); }
+      else if (cfg.lvl === 2) { const k = rnd(1, 4); if (k === 1) { a = rnd(11, 40); b = pick([5, 9, 11, 12, 15, 25]); } else { a = rnd(11, 29); b = rnd(2, 12); } }
+      else { const k = rnd(1, 4); if (k === 1) { const m = rnd(3, 9) * 10, d = rnd(1, 5); a = m - d; b = m + d; } else if (k === 2) { a = rnd(21, 99); b = pick([5, 25, 50, 99, 101, 15]); } else { a = rnd(11, 99); b = rnd(11, 29); } }
+      if (Math.random() < .5) [a, b] = [b, a];
+      return { txt: `${a} × ${b}`, r: a * b, ex: () => explainMul(a, b) };
+    },
+    div() {
+      let b, q;
+      if (cfg.lvl === 1) { b = rnd(2, 10); q = rnd(2, 10); }
+      else if (cfg.lvl === 2) { b = pick([2, 3, 4, 5, 6, 7, 8, 9, 12, 25]); q = rnd(4, 30); }
+      else { b = pick([5, 12, 14, 15, 16, 18, 24, 25, 36]); q = rnd(11, 60); }
+      return { txt: `${b * q} ÷ ${b}`, r: q, ex: () => explainDiv(b * q, b) };
+    },
+    sq() { const n = cfg.lvl === 1 ? rnd(2, 15) : cfg.lvl === 2 ? rnd(11, 35) : rnd(21, 99); return { txt: `${n}<sup>2</sup>`, r: n * n, ex: () => explainSq(n) }; },
+    root() { const n = cfg.lvl === 1 ? rnd(2, 15) : cfg.lvl === 2 ? rnd(11, 35) : rnd(21, 99); return { txt: `<span class="rt">√</span><span class="ov">${n * n}</span>`, r: n, ex: () => explainRoot(n * n) }; },
+    pct() {
+      const ps = cfg.lvl === 1 ? [10, 20, 25, 50] : cfg.lvl === 2 ? [5, 10, 15, 20, 25, 30, 40, 50, 75] : [4, 6, 8, 12, 15, 18, 35, 45, 60, 65, 85, 95];
+      let p, n;
+      for (let i = 0; i < 50; i++) { p = pick(ps); n = rnd(2, cfg.lvl === 1 ? 20 : 40) * 20; if ((p * n) % 100 === 0) break; }
+      return { txt: `${p}% von ${n}`, r: p * n / 100, ex: () => explainPct(p, n) };
+    }
+  };
+  const makeTask = () => G[pick(cfg.ops)]();
+
+  // ---------- Spiel ----------
   let st;
+  const timed = () => cfg.dur > 0;
   function start() {
-    st = { correct: 0, total: 0, streak: 0, best: 0, input: '', missed: [], t0: 0, timer: null, end: 0 };
+    st = { correct: 0, total: 0, streak: 0, best: 0, helps: 0, input: '', missed: [], t0: Date.now(), timer: null, left: cfg.dur * 1000, last: 0, paused: false, wrong: false };
     show('#s-game');
+    $('#bar').style.display = timed() ? '' : 'none';
+    $('#quit').textContent = timed() ? 'Abbrechen' : 'Beenden';
     next();
-    st.end = Date.now() + cfg.dur * 1000;
-    st.t0 = Date.now();
-    tick();
-    st.timer = setInterval(tick, 200);
+    if (timed()) { st.last = Date.now(); tick(); st.timer = setInterval(tick, 200); }
+    else $('#time').textContent = 'Üben';
   }
   function tick() {
-    const left = Math.max(0, st.end - Date.now());
-    $('#time').textContent = Math.ceil(left / 1000) + ' s';
-    $('#fill').style.width = (left / (cfg.dur * 1000) * 100) + '%';
-    if (left <= 0) finish();
+    if (!st.paused) st.left -= Date.now() - st.last;
+    st.last = Date.now();
+    st.left = Math.max(0, st.left);
+    $('#time').textContent = Math.ceil(st.left / 1000) + ' s';
+    $('#fill').style.width = (st.left / (cfg.dur * 1000) * 100) + '%';
+    if (st.left <= 0) finish();
   }
   function next() {
-    st.task = makeTask();
-    $('#q').textContent = st.task.txt;
+    st.task = makeTask(); st.wrong = false; st.helped = false;
+    $('#q').innerHTML = st.task.txt;
     st.input = ''; render();
     $('#hint').textContent = '';
     $('#a').classList.remove('ok', 'bad');
+    $('#ok').textContent = 'Prüfen'; $('#ok').classList.remove('next');
+    $('#help').hidden = false;
   }
-  function render() {
-    const a = $('#a');
-    a.textContent = st.input;
-    a.classList.toggle('empty', st.input === '');
-  }
+  function render() { const a = $('#a'); a.textContent = st.input; a.classList.toggle('empty', st.input === ''); }
   function check() {
+    if (st.wrong) return next();
     if (st.input === '' || st.input === '-') return;
     st.total++;
     const a = $('#a');
     if (Number(st.input) === st.task.r) {
       st.correct++; st.streak++; st.best = Math.max(st.best, st.streak);
-      a.classList.add('ok');
+      a.classList.add('ok'); $('#help').hidden = true;
       $('#cnt').textContent = st.correct + ' richtig';
-      setTimeout(next, 120);
+      setTimeout(next, 150);
     } else {
-      st.streak = 0;
-      st.missed.push(`${st.task.txt} = ${st.task.r}`);
+      st.streak = 0; st.wrong = true;
+      st.missed.push(st.task);
       a.classList.add('bad');
-      $('#hint').textContent = 'Richtig wäre ' + st.task.r;
+      $('#hint').textContent = 'Richtig: ' + st.task.r;
+      $('#ok').textContent = 'Weiter'; $('#ok').classList.add('next');
       if (navigator.vibrate) navigator.vibrate(60);
-      setTimeout(next, 700);
     }
   }
   function finish() {
     clearInterval(st.timer);
     const secs = (Date.now() - st.t0) / 1000;
     $('#r-score').textContent = st.correct;
-    $('#r-total').textContent = st.total;
     $('#r-acc').textContent = st.total ? Math.round(st.correct / st.total * 100) + ' %' : '–';
     $('#r-avg').textContent = st.total ? (secs / st.total).toFixed(1) + ' s' : '–';
     $('#r-streak').textContent = st.best;
-    const prev = store.read();
-    $('#r-new').textContent = st.correct > prev ? 'Neuer Bestwert!' : '';
-    if (st.correct > prev) store.write(st.correct);
+    $('#r-help').textContent = st.helps;
+    const prev = store.read(), isNew = timed() && st.correct > prev;
+    $('#r-new').textContent = isNew ? 'Neuer Bestwert!' : '';
+    if (isNew) store.write(st.correct);
     const m = $('#r-miss');
-    m.innerHTML = st.missed.length ? 'Nochmal anschauen:' + st.missed.slice(0, 6).map(x => `<div>${x}</div>`).join('') : '';
-    show('#s-end');
-    showBest();
+    m.innerHTML = st.missed.length ? 'Falsch gelöst – Rechenweg ansehen:' + st.missed.slice(0, 8).map((t, i) => `<div><span>${t.txt} = ${t.r}</span><button data-i="${i}">?</button></div>`).join('') : '';
+    show('#s-end'); showBest();
   }
+  $('#r-miss').addEventListener('click', e => { const b = e.target.closest('button'); if (b) openHelp(st.missed[b.dataset.i], false); });
 
-  document.querySelectorAll('.k').forEach(k => k.addEventListener('click', () => {
-    const f = k.dataset.k;
-    if (!f) { if (st.input.replace('-', '').length < 7) st.input += k.textContent; }
+  // ---------- Hilfe ----------
+  function openHelp(task, inGame) {
+    const [title, steps] = task.ex();
+    $('#e-title').innerHTML = task.txt.replace(/<[^>]+>/g, m => m) + ' = ' + task.r;
+    $('#e-strat').textContent = title;
+    $('#e-steps').innerHTML = steps.map((x, i) => `<p${i === 0 ? ' class="note"' : ''}>${x}</p>`).join('');
+    $('#sheet-bg').classList.add('open');
+    if (inGame) { if (!st.helped) { st.helped = true; st.helps++; } if (timed()) { st.paused = true; $('#bar').classList.add('paused'); } }
+  }
+  $('#help').onclick = () => openHelp(st.task, true);
+  $('#e-close').onclick = () => { $('#sheet-bg').classList.remove('open'); if (st) { st.paused = false; st.last = Date.now(); $('#bar').classList.remove('paused'); } };
+
+  // ---------- Eingabe ----------
+  const input = f => {
+    if (st.wrong && f !== 'ok' && f !== 'quit') return;
+    if (/^[0-9]$/.test(f)) { if (st.input.replace('-', '').length < 7) st.input += f; }
     else if (f === 'del') st.input = st.input.slice(0, -1);
     else if (f === 'neg') st.input = st.input.startsWith('-') ? st.input.slice(1) : '-' + st.input;
     else if (f === 'ok') return check();
-    else if (f === 'quit') { clearInterval(st.timer); return show('#s-start'); }
-    render();
-  }));
-
-  // Tastatur (falls am Rechner)
-  document.addEventListener('keydown', e => {
-    if (!$('#s-game').classList.contains('active')) return;
-    if (/^[0-9]$/.test(e.key)) st.input += e.key;
-    else if (e.key === 'Backspace') st.input = st.input.slice(0, -1);
-    else if (e.key === '-') st.input = st.input.startsWith('-') ? st.input.slice(1) : '-' + st.input;
-    else if (e.key === 'Enter') return check();
+    else if (f === 'quit') { clearInterval(st.timer); return timed() ? show('#s-start') : finish(); }
     else return;
     render();
+  };
+  document.querySelectorAll('.k').forEach(k => k.addEventListener('click', () => input(k.dataset.k || k.textContent)));
+  document.addEventListener('keydown', e => {
+    if (!$('#s-game').classList.contains('active') || $('#sheet-bg').classList.contains('open')) return;
+    const map = { Backspace: 'del', Enter: 'ok', '-': 'neg', '?': 'help' };
+    if (map[e.key] === 'help') return $('#help').hidden || $('#help').click();
+    input(map[e.key] || e.key);
   });
 
-  $('#start').onclick = start;
-  $('#again').onclick = start;
-  $('#home').onclick = () => show('#s-start');
+  $('#start').onclick = start; $('#again').onclick = start; $('#home').onclick = () => show('#s-start');
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
 })();
 </script>
-<script>if("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js");</script>
 </body>
 </html>
